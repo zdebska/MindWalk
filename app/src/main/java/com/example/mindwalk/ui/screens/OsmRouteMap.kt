@@ -13,6 +13,8 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Polyline
+import org.osmdroid.views.overlay.Marker
+import java.util.*
 
 @Composable
 fun OsmRouteMap(
@@ -23,9 +25,20 @@ fun OsmRouteMap(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
-    // OSMDroid needs userAgent set (important)
+    // Initialize configuration once
     LaunchedEffect(Unit) {
-        Configuration.getInstance().userAgentValue = context.packageName
+        Configuration.getInstance().apply {
+            // Set a unique user agent as required by OSM policy
+            userAgentValue = "MindWalk/1.0 (Android; ${context.packageName})"
+            
+            // Use internal cache directory to avoid permission issues with external storage
+            val cacheDir = context.cacheDir
+            osmdroidBasePath = cacheDir
+            osmdroidTileCache = cacheDir
+            
+            // Load existing preferences if any
+            load(context, context.getSharedPreferences("osmdroid", 0))
+        }
     }
 
     var mapView: MapView? by remember { mutableStateOf(null) }
@@ -42,35 +55,54 @@ fun OsmRouteMap(
                 setMultiTouchControls(true)
 
                 controller.setZoom(zoom)
-                if (routePoints.isNotEmpty()) {
-                    controller.setCenter(routePoints.first())
+                
+                val defaultCenter = if (routePoints.isNotEmpty()) {
+                    routePoints.first()
+                } else {
+                    GeoPoint(49.1951, 16.6068) // Brno
                 }
+                controller.setCenter(defaultCenter)
 
                 mapView = this
             }
         },
         update = { map ->
-            // remove old polylines
-            map.overlays.removeAll { it is Polyline }
+            if (routePoints.isNotEmpty()) {
+                map.controller.setCenter(routePoints.first())
+            }
+
+            map.overlays.clear()
 
             if (routePoints.size >= 2) {
+                // Route Line
                 val line = Polyline().apply {
                     setPoints(routePoints)
                     outlinePaint.color = android.graphics.Color.parseColor("#5A8F75")
-                    outlinePaint.strokeWidth = 10f
+                    outlinePaint.strokeWidth = 12f
                     outlinePaint.strokeCap = android.graphics.Paint.Cap.ROUND
                     outlinePaint.strokeJoin = android.graphics.Paint.Join.ROUND
                 }
                 map.overlays.add(line)
 
-                // keep camera centered (optional)
-                map.controller.setCenter(routePoints.first())
-                map.invalidate()
+                // Start
+                map.overlays.add(Marker(map).apply {
+                    position = routePoints.first()
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    title = "Start"
+                })
+
+                // End
+                map.overlays.add(Marker(map).apply {
+                    position = routePoints.last()
+                    setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
+                    title = "End"
+                })
             }
+            
+            map.invalidate()
         }
     )
 
-    // lifecycle bridge for MapView
     DisposableEffect(lifecycleOwner) {
         val obs = LifecycleEventObserver { _, e ->
             when (e) {

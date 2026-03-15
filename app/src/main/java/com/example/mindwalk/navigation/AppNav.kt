@@ -7,7 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.mindwalk.ui.screens.PlanYourWalkScreen
 import com.example.mindwalk.ui.screens.RoutePreviewScreen
-import com.example.mindwalk.viewmodel.PlanViewModel
+import com.example.mindwalk.ui.viewmodel.PlanViewModel
 
 @Composable
 fun AppNav() {
@@ -21,8 +21,8 @@ fun AppNav() {
         composable(Routes.PLAN) {
             PlanYourWalkScreen(
                 vm = vm,
-                onGenerate = {
-                    vm.generateFakePreviewRoute()      // <-- creates fake points
+                onGenerate = { _, _, _ ->
+                    vm.generateABRoute()
                     navController.navigate(Routes.PREVIEW)
                 }
             )
