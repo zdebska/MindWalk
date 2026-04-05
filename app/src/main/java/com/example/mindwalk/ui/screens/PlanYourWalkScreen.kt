@@ -1,6 +1,9 @@
 package com.example.mindwalk.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -9,9 +12,6 @@ import androidx.compose.ui.unit.dp
 import com.example.mindwalk.ui.components.ChoiceChip
 import com.example.mindwalk.ui.components.PrimaryButton
 import com.example.mindwalk.ui.components.SectionCard
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.lazy.LazyColumn
 import com.example.mindwalk.ui.viewmodel.PlanViewModel
 
 
@@ -19,6 +19,7 @@ import com.example.mindwalk.ui.viewmodel.PlanViewModel
 @Composable
 fun PlanYourWalkScreen(
     vm: PlanViewModel,
+    onSelectLocation: () -> Unit,
     onGenerate: (durationMin: Int, mode: String, shape: String) -> Unit
 ) {
     val accent = Color(0xFF6B9E7F)
@@ -82,9 +83,13 @@ fun PlanYourWalkScreen(
             item {
                 SectionCard(title = "Start / End") {
                     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Column {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onSelectLocation() }
+                        ) {
                             Text("Start", style = MaterialTheme.typography.bodySmall, color = Color(0xFF777777))
-                            Text("Current Location")
+                            Text(vm.startLocationName)
                         }
                         Column {
                             Text("End", style = MaterialTheme.typography.bodySmall, color = Color(0xFF777777))
@@ -153,4 +158,3 @@ private fun StatMini(value: String, label: String) {
         )
     }
 }
-
