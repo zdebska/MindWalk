@@ -49,7 +49,7 @@ class PlanViewModel : ViewModel() {
     fun generateABRoute() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                val start = startLocation?.let { Point(it.latitude, it.longitude) } ?: Point(49.1911, 16.6122)
+                val start = Point(49.1951, 16.6083)
                 val end = Point(49.1951, 16.6083)
 
                 val route = osrmService.fetchWalkingRoute(listOf(start, end))
@@ -57,7 +57,7 @@ class PlanViewModel : ViewModel() {
             } catch (e: Exception) {
                 previewRoutePoints = listOf(
                     GeoPoint(49.1911, 16.6122),
-                    GeoPoint(49.1951, 16.6083)
+                    GeoPoint(49.1951, 16.6122)
                 )
             }
         }
