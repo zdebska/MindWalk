@@ -4,6 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -14,22 +16,32 @@ import com.example.mindwalk.ui.components.PrimaryButton
 import com.example.mindwalk.ui.components.SectionCard
 import com.example.mindwalk.ui.viewmodel.PlanViewModel
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlanYourWalkScreen(
     vm: PlanViewModel,
+    preSelectedMode: String = "",
+    onBack: () -> Unit = {},
     onSelectLocation: () -> Unit,
     onGenerate: (durationMin: Int, mode: String, shape: String) -> Unit
 ) {
     val accent = Color(0xFF6B9E7F)
 
-    var duration by remember { mutableIntStateOf(30) }
-    var mindfulnessMode by remember { mutableStateOf("Calm") }
+    var duration by remember { mutableStateOf(30) }
+    var mindfulnessMode by remember { mutableStateOf(preSelectedMode.ifEmpty { "Calm" }) }
     var routeShape by remember { mutableStateOf("Loop") }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Plan Your Walk") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Plan Your Walk") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        },
         bottomBar = {
             Column(
                 modifier = Modifier
@@ -40,7 +52,6 @@ fun PlanYourWalkScreen(
                 PrimaryButton("Generate Route") {
                     onGenerate(duration, mindfulnessMode, routeShape)
                 }
-
                 OutlinedButton(
                     onClick = { onGenerate(duration, mindfulnessMode, routeShape) },
                     modifier = Modifier.fillMaxWidth().height(54.dp),
@@ -51,7 +62,6 @@ fun PlanYourWalkScreen(
             }
         }
     ) { padding ->
-
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -69,12 +79,9 @@ fun PlanYourWalkScreen(
 
             item {
                 SectionCard(title = "Today's Progress") {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         StatMini("1.2 km", "Distance")
-                        StatMini("2,847", "Steps")
+                        StatMini("2,847",  "Steps")
                         StatMini("18 min", "Time")
                     }
                 }
@@ -116,32 +123,25 @@ fun PlanYourWalkScreen(
 
             item {
                 SectionCard(title = "Mindfulness Mode") {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        ChoiceChip("Calm", mindfulnessMode == "Calm", { mindfulnessMode = "Calm" }, Modifier.weight(1f))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                        ChoiceChip("Calm",   mindfulnessMode == "Calm",   { mindfulnessMode = "Calm" },   Modifier.weight(1f))
                         ChoiceChip("Scenic", mindfulnessMode == "Scenic", { mindfulnessMode = "Scenic" }, Modifier.weight(1f))
-                        ChoiceChip("Explore", mindfulnessMode == "Explore", { mindfulnessMode = "Explore" }, Modifier.weight(1f))
+                        ChoiceChip("Explore",mindfulnessMode == "Explore",{ mindfulnessMode = "Explore" },Modifier.weight(1f))
                     }
                 }
             }
 
             item {
                 SectionCard(title = "Route Shape") {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        ChoiceChip("Loop", routeShape == "Loop", { routeShape = "Loop" }, Modifier.weight(1f))
-                        ChoiceChip("Line", routeShape == "Line", { routeShape = "Line" }, Modifier.weight(1f))
-                        ChoiceChip("Heart", routeShape == "Heart", { routeShape = "Heart" }, Modifier.weight(1f))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                        ChoiceChip("Loop",   routeShape == "Loop",   { routeShape = "Loop" },   Modifier.weight(1f))
+                        ChoiceChip("Line",   routeShape == "Line",   { routeShape = "Line" },   Modifier.weight(1f))
+                        ChoiceChip("Heart",  routeShape == "Heart",  { routeShape = "Heart" },  Modifier.weight(1f))
                         ChoiceChip("Random", routeShape == "Random", { routeShape = "Random" }, Modifier.weight(1f))
                     }
                 }
             }
 
-            // IMPORTANT: add spacer so last card isn’t hidden behind bottom buttons
             item { Spacer(Modifier.height(90.dp)) }
         }
     }
@@ -151,10 +151,6 @@ fun PlanYourWalkScreen(
 private fun StatMini(value: String, label: String) {
     Column {
         Text(value, style = MaterialTheme.typography.titleMedium)
-        Text(
-            label,
-            style = MaterialTheme.typography.bodySmall,
-            color = Color(0xFF777777)
-        )
+        Text(label, style = MaterialTheme.typography.bodySmall, color = Color(0xFF777777))
     }
 }

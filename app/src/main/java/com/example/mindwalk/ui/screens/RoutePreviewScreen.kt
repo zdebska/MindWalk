@@ -14,15 +14,13 @@ import com.example.mindwalk.ui.viewmodel.PlanViewModel
 @Composable
 fun RoutePreviewScreen(
     vm: PlanViewModel,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onStartWalk: () -> Unit = {}
 ) {
     val routePoints = vm.previewRoutePoints
 
     Box(Modifier.fillMaxSize()) {
-        OsmRouteMap(
-            modifier = Modifier.fillMaxSize(),
-            routePoints = routePoints
-        )
+        OsmRouteMap(modifier = Modifier.fillMaxSize(), routePoints = routePoints)
 
         // Top bar overlay
         Surface(
@@ -34,27 +32,23 @@ fun RoutePreviewScreen(
                 .align(Alignment.TopCenter)
         ) {
             Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                TextButton(
-                    onClick = onBack,
-                    contentPadding = PaddingValues(0.dp)
-                ) { Text("← Back") }
-
+                TextButton(onClick = onBack, contentPadding = PaddingValues(0.dp)) {
+                    Text("← Back")
+                }
                 Text(
-                    text = "Route Preview",
+                    "Route Preview",
                     style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
                 )
             }
         }
 
-        // Bottom card overlay
+        // Bottom card
         RouteDetailsCard(
-            distanceKm = 1.2, // This could be calculated from routePoints
+            distanceKm = 1.2,
             durationMin = 15,
             vibe = "Mindful",
-            onStartWalk = { /* TODO: Implement navigation start */ },
-            onTryAgain = {
-                vm.generateABRoute()
-            },
+            onStartWalk = onStartWalk,
+            onTryAgain = { vm.generateABRoute() },
             onEdit = { onBack() },
             modifier = Modifier
                 .align(Alignment.BottomCenter)
@@ -82,16 +76,16 @@ private fun RouteDetailsCard(
     ) {
         Column(Modifier.padding(16.dp)) {
             Text(
-                text = "Route Details",
+                "Route Details",
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
             )
 
             Spacer(Modifier.height(12.dp))
 
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                StatItem(title = "$distanceKm", subtitle = "km\nDistance")
-                StatItem(title = "$durationMin min", subtitle = "Duration")
-                StatItem(title = vibe, subtitle = "Vibe Score")
+                StatItem("$distanceKm", "km\nDistance")
+                StatItem("$durationMin min", "Duration")
+                StatItem(vibe, "Vibe Score")
             }
 
             Spacer(Modifier.height(14.dp))
