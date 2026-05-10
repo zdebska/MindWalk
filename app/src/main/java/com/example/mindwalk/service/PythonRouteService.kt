@@ -43,10 +43,17 @@ class PythonRouteService {
         }
     }
 
-    suspend fun getRouteFromPython(distanceKm: Double, mode: String): List<Point> {
+    suspend fun getRouteFromPython(
+        distanceKm: Double,
+        mode: String,
+        startLat: Double? = null,
+        startLon: Double? = null
+    ): List<Point> {
         val request = RouteRequest(
             place = "Brno, Czechia",
             distanceKm = distanceKm,
+            startLat = startLat,
+            startLon = startLon,
             mode = mode.lowercase(),
             seed = (0..1000).random()
         )

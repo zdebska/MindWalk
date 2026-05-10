@@ -35,7 +35,12 @@ class PlanViewModel : ViewModel() {
             isLoading = true
             try {
                 val distanceKm = (durationMin / 12.0).coerceAtLeast(1.0)
-                val route = pythonRouteService.getRouteFromPython(distanceKm, mode)
+                val route = pythonRouteService.getRouteFromPython(
+                    distanceKm = distanceKm,
+                    mode = mode,
+                    startLat = startLocation?.latitude,
+                    startLon = startLocation?.longitude
+                )
                 previewRoutePoints = route.map { GeoPoint(it.lat, it.lon) }
             } catch (e: Exception) {
                 e.printStackTrace()
