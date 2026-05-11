@@ -1,6 +1,11 @@
 package com.example.mindwalk.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -40,21 +45,39 @@ fun AppNav() {
             route = "${Routes.PLAN}?mode={mode}",
             arguments = listOf(navArgument("mode") { defaultValue = "" })
         ) { back ->
-            PlanYourWalkScreen(
-                vm               = vm,
-                preSelectedMode  = back.arguments?.getString("mode") ?: "",
-                onBack           = { navController.popBackStack() },
-                onSelectLocation = { navController.navigate(Routes.LOCATION_PICKER) },
-                onGenerate       = { dur, mode, shape ->
-                    vm.generatePythonRoute(dur, mode, shape)
+            // Track whether the user triggered a generation in this session.
+            var pendingNav by remember { mutableStateOf(false) }
+
+            // Navigate to PREVIEW only when loading finishes without an error.
+            LaunchedEffect(vm.isLoading, vm.routeError) {
+                if (pendingNav && !vm.isLoading && !vm.routeError) {
+                    pendingNav = false
                     navController.navigate(Routes.PREVIEW)
+                }
+            }
+
+            PlanYourWalkScreen(
+                vm                  = vm,
+                preSelectedMode     = back.arguments?.getString("mode") ?: "",
+                onBack              = { if (!vm.isLoading) navController.popBackStack() },
+                onDismissError      = { pendingNav = false; vm.clearError() },
+                onSelectLocation    = { navController.navigate(Routes.LOCATION_PICKER) },
+                onSelectEndLocation = { navController.navigate(Routes.END_LOCATION_PICKER) },
+                onGenerate          = { dur, mode, shape ->
+                    pendingNav = true
+                    vm.generatePythonRoute(dur, mode, shape)
                 }
             )
         }
 
         // ── Location picker ───────────────────────────────────────────────────
         composable(Routes.LOCATION_PICKER) {
-            LocationPickerScreen(vm = vm, onBack = { navController.popBackStack() })
+            LocationPickerScreen(vm = vm, isStart = true, onBack = { navController.popBackStack() })
+        }
+
+        // ── End location picker ───────────────────────────────────────────────
+        composable(Routes.END_LOCATION_PICKER) {
+            LocationPickerScreen(vm = vm, isStart = false, onBack = { navController.popBackStack() })
         }
 
         // ── Route preview ─────────────────────────────────────────────────────

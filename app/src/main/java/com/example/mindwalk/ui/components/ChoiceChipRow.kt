@@ -9,7 +9,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.mindwalk.ui.theme.Green100
+import com.example.mindwalk.ui.theme.Green600
+import com.example.mindwalk.ui.theme.Green700
 
 @Composable
 fun ChoiceChip(
@@ -18,18 +22,20 @@ fun ChoiceChip(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val accent = Color(0xFF6B9E7F)
-    val activeBg = Color(0xFFE8F3ED)
-
     AssistChip(
         onClick = onClick,
-        label = { Text(text) },
+        label = {
+            Text(
+                text,
+                fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (active) Green700 else Color(0xFF6B7280)
+            )
+        },
         colors = AssistChipDefaults.assistChipColors(
-            containerColor = if (active) activeBg else Color.White,
-            labelColor = if (active) accent else Color(0xFF666666)
+            containerColor = if (active) Green100 else Color.White.copy(alpha = 0.6f)
         ),
-        border = BorderStroke(1.dp, if (active) accent else Color(0xFFE9E9E9)),
-        shape = RoundedCornerShape(14.dp),
-        modifier = modifier.height(52.dp)
+        border = BorderStroke(1.dp, if (active) Green600 else Color(0xFFE2E8F0)),
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.height(44.dp)
     )
 }

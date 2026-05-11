@@ -19,45 +19,70 @@ class PlanViewModel : ViewModel() {
     var startLocation by mutableStateOf<GeoPoint?>(null)
     var startLocationName by mutableStateOf("Current Location")
 
+    var endLocation by mutableStateOf<GeoPoint?>(null)
+    var endLocationName by mutableStateOf("Select end point")
+
     var previewRoutePoints by mutableStateOf<List<GeoPoint>>(emptyList())
         private set
 
     var isLoading by mutableStateOf(false)
         private set
 
+    var routeError by mutableStateOf(false)
+        private set
+
+    // Remember last params so retryRoute() can re-use them
+    private var lastDuration = 30
+    private var lastMode     = "Calm"
+    private var lastShape    = "Loop"
+
     fun setStartLocation(point: GeoPoint, name: String) {
         startLocation = point
         startLocationName = name
     }
 
+    fun setEndLocation(point: GeoPoint, name: String) {
+        endLocation = point
+        endLocationName = name
+    }
+
     fun generatePythonRoute(durationMin: Int, mode: String, shape: String) {
+        lastDuration = durationMin
+        lastMode     = mode
+        lastShape    = shape
+        routeError   = false
+        isLoading    = true   // set on Main thread before coroutine starts
         viewModelScope.launch(Dispatchers.IO) {
-            isLoading = true
             try {
                 val distanceKm = (durationMin / 12.0).coerceAtLeast(1.0)
                 val route = pythonRouteService.getRouteFromPython(
                     distanceKm = distanceKm,
-                    mode = mode,
-                    startLat = startLocation?.latitude,
-                    startLon = startLocation?.longitude
+                    mode       = mode,
+                    shape      = shape,
+                    startLat   = startLocation?.latitude,
+                    startLon   = startLocation?.longitude,
+                    endLat     = endLocation?.latitude,
+                    endLon     = endLocation?.longitude
                 )
                 previewRoutePoints = route.map { GeoPoint(it.lat, it.lon) }
             } catch (e: Exception) {
                 e.printStackTrace()
-                generateABRoute()
+                routeError = true
             } finally {
                 isLoading = false
             }
         }
     }
 
+    fun retryRoute() = generatePythonRoute(lastDuration, lastMode, lastShape)
+
+    fun clearError() { routeError = false }
+
     fun generateABRoute() {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val start = Point(49.1951, 16.6083)
-                val end = Point(49.1951, 16.6083)
-
-                val route = osrmService.fetchWalkingRoute(listOf(start, end))
+                val route = osrmService.fetchWalkingRoute(listOf(start, start))
                 previewRoutePoints = route.map { GeoPoint(it.lat, it.lon) }
             } catch (e: Exception) {
                 previewRoutePoints = listOf(
