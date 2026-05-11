@@ -72,6 +72,7 @@ dependencies {
 
     // ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.activity:activity-compose:1.9.0")
 
     // Maps & Networking
     implementation("org.osmdroid:osmdroid-android:6.1.18")

@@ -1,5 +1,12 @@
 package com.example.mindwalk.ui.screens
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -14,12 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import com.example.mindwalk.ui.theme.Green600
-import com.example.mindwalk.ui.theme.Green700
 import com.example.mindwalk.ui.viewmodel.PlanViewModel
 import org.osmdroid.events.MapEventsReceiver
 import org.osmdroid.util.GeoPoint
@@ -33,12 +41,50 @@ fun LocationPickerScreen(
     isStart: Boolean = true,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
     val initialPoint = if (isStart) vm.startLocation else vm.endLocation
     val initialName  = if (isStart) vm.startLocationName else vm.endLocationName
 
     var searchQuery by remember { mutableStateOf("") }
     var selectedPoint by remember { mutableStateOf(initialPoint ?: GeoPoint(49.1951, 16.6068)) }
     var selectedName  by remember { mutableStateOf(initialName) }
+
+    fun hasLocationPermission() = ContextCompat.checkSelfPermission(
+        context, Manifest.permission.ACCESS_FINE_LOCATION
+    ) == PackageManager.PERMISSION_GRANTED
+
+    @SuppressLint("MissingPermission")
+    fun getDeviceLocation(): GeoPoint? {
+        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return (lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
+            ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER))
+            ?.let { GeoPoint(it.latitude, it.longitude) }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted && initialPoint == null) {
+            getDeviceLocation()?.let {
+                selectedPoint = it
+                selectedName = "Current Location"
+            }
+        }
+    }
+
+    // On first open with no prior point: request permission or read location immediately
+    LaunchedEffect(Unit) {
+        if (initialPoint == null) {
+            if (hasLocationPermission()) {
+                getDeviceLocation()?.let {
+                    selectedPoint = it
+                    selectedName = "Current Location"
+                }
+            } else {
+                permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+            }
+        }
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -163,8 +209,14 @@ fun LocationPickerScreen(
         ) {
             IconButton(
                 onClick = {
-                    selectedPoint = GeoPoint(49.1911, 16.6122)
-                    selectedName  = "Current Location"
+                    if (hasLocationPermission()) {
+                        getDeviceLocation()?.let {
+                            selectedPoint = it
+                            selectedName  = "Current Location"
+                        }
+                    } else {
+                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+                    }
                 }
             ) {
                 Icon(

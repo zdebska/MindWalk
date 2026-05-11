@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.WifiOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -49,9 +50,9 @@ fun PlanYourWalkScreen(
     onGenerate: (durationMin: Int, mode: String, shape: String) -> Unit
 ) {
     val context = LocalContext.current
-    var duration by remember { mutableStateOf(30) }
-    var mindfulnessMode by remember { mutableStateOf(preSelectedMode.ifEmpty { "Calm" }) }
-    var routeShape by remember { mutableStateOf("Loop") }
+    var duration by rememberSaveable { mutableStateOf(30) }
+    var mindfulnessMode by rememberSaveable { mutableStateOf(preSelectedMode.ifEmpty { "Calm" }) }
+    var routeShape by rememberSaveable { mutableStateOf("Loop") }
     var locationOfflineError by remember { mutableStateOf(false) }
     var offlineAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
