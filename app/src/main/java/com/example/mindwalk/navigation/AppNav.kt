@@ -13,11 +13,13 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.mindwalk.ui.screens.*
 import com.example.mindwalk.ui.viewmodel.PlanViewModel
+import com.example.mindwalk.ui.viewmodel.SavedRoutesViewModel
 
 @Composable
 fun AppNav() {
     val navController = rememberNavController()
-    val vm: PlanViewModel = viewModel()
+    val vm: PlanViewModel          = viewModel()
+    val savedVm: SavedRoutesViewModel = viewModel()
 
     // Pop back to HOME and navigate to a top-level tab (for bottom nav switches).
     fun switchTab(route: String) {
@@ -97,6 +99,8 @@ fun AppNav() {
         // ── Post-walk reflection ──────────────────────────────────────────────
         composable(Routes.REFLECTION) {
             PostWalkReflectionScreen(
+                planVm  = vm,
+                savedVm = savedVm,
                 onComplete = {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.HOME) { inclusive = true }
@@ -108,9 +112,14 @@ fun AppNav() {
         // ── Saved routes ──────────────────────────────────────────────────────
         composable(Routes.SAVED) {
             SavedRoutesScreen(
-                onBack    = { navController.popBackStack() },
-                onHome    = { switchTab(Routes.HOME) },
-                onJourney = { switchTab(Routes.JOURNEY) }
+                savedVm         = savedVm,
+                onBack          = { navController.popBackStack() },
+                onHome          = { switchTab(Routes.HOME) },
+                onJourney       = { switchTab(Routes.JOURNEY) },
+                onRouteSelected = { route ->
+                    vm.loadSavedRoute(route)
+                    navController.navigate(Routes.PREVIEW)
+                }
             )
         }
 

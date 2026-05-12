@@ -72,9 +72,9 @@ fun RoutePreviewScreen(
 
         // ── Bottom details card ────────────────────────────────────────────────
         RouteDetailsCard(
-            distanceKm  = 1.2,
-            durationMin = 15,
-            vibe        = "Mindful",
+            distanceKm  = vm.planDistanceKm,
+            durationMin = vm.planDurationMin,
+            vibe        = vm.planMode.ifEmpty { "Mindful" },
             onStartWalk = onStartWalk,
             onTryAgain  = { vm.generateABRoute() },
             onEdit      = { onBack() },
@@ -115,7 +115,7 @@ private fun RouteDetailsCard(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                RouteStatItem(value = "${distanceKm} km", label = "Distance")
+                RouteStatItem(value = "${"%.1f".format(distanceKm)} km", label = "Distance")
                 VerticalDivider(modifier = Modifier.height(40.dp), color = Color(0xFFE2E8F0))
                 RouteStatItem(value = "$durationMin min", label = "Duration")
                 VerticalDivider(modifier = Modifier.height(40.dp), color = Color(0xFFE2E8F0))

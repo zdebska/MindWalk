@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit
 
 class PythonRouteService {
     private val BASE_URL = "http://10.0.2.2:8000/"
+    //private val BASE_URL = "https://katya-route-api-2026.azurewebsites.net/"
 
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
