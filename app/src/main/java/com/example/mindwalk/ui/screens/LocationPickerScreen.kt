@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -38,15 +37,31 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.MapEventsOverlay
 import org.osmdroid.views.overlay.Marker
 
-// ── File-level helpers ─────────────────────────────────────────────────────────
-
+/**
+ * Returns the most recent known location from GPS or Network provider, or null if unavailable.
+ *
+ * Used as the fast path before requesting a live location fix.
+ *
+ * @param lm System [LocationManager] instance.
+ * @return Last known [GeoPoint], or null if neither provider has a cached location.
+ */
 @SuppressLint("MissingPermission")
 private fun lastKnownGeoPoint(lm: LocationManager): GeoPoint? =
     (lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)
         ?: lm.getLastKnownLocation(LocationManager.NETWORK_PROVIDER))
         ?.let { GeoPoint(it.latitude, it.longitude) }
 
-// Registers a one-shot listener on GPS + Network, removes itself after first fix.
+/**
+ * Registers a one-shot location listener on GPS and Network providers.
+ *
+ * The listener removes itself from [lm] after the first fix is delivered to [onLocation],
+ * so no manual cleanup is required in the success path. The returned [LocationListener]
+ * should be passed to [LocationManager.removeUpdates] in the error or cancellation path.
+ *
+ * @param lm         System [LocationManager] instance.
+ * @param onLocation Callback invoked with the resolved [GeoPoint] on first fix.
+ * @return The registered [LocationListener] for optional manual removal.
+ */
 @SuppressLint("MissingPermission")
 private fun requestOneShotLocation(
     lm: LocationManager,
@@ -71,8 +86,23 @@ private fun requestOneShotLocation(
     return listener
 }
 
-// ── Screen ─────────────────────────────────────────────────────────────────────
-
+/**
+ * Full-screen map composable that lets the user pick a geographic point by tapping.
+ *
+ * On first open, the map attempts to centre on the device's current location:
+ * - Requests [android.Manifest.permission.ACCESS_FINE_LOCATION] if not already granted.
+ * - Uses the last known cached location for an instant result, falling back to a live one-shot fix.
+ *
+ * The user can also tap anywhere on the map to place or move the selection marker. A "My Location"
+ * FAB (floating action button) re-centres the selection on the device's current position at any time.
+ *
+ * Tapping "Confirm Location" stores the selected [GeoPoint] and label in [PlanViewModel] via
+ * [PlanViewModel.setStartLocation] or [PlanViewModel.setEndLocation], then pops the back stack.
+ *
+ * @param vm      Shared [PlanViewModel] that receives the confirmed location.
+ * @param isStart True to set the start location; false to set the end location.
+ * @param onBack  Navigation callback invoked after confirmation or on the Back button.
+ */
 @Composable
 fun LocationPickerScreen(
     vm: PlanViewModel,
@@ -83,7 +113,6 @@ fun LocationPickerScreen(
     val initialPoint = if (isStart) vm.startLocation else vm.endLocation
     val initialName  = if (isStart) vm.startLocationName else vm.endLocationName
 
-    var searchQuery    by remember { mutableStateOf("") }
     var selectedPoint  by remember { mutableStateOf(initialPoint ?: GeoPoint(49.1951, 16.6068)) }
     var selectedName   by remember { mutableStateOf(initialName) }
 
@@ -166,51 +195,30 @@ fun LocationPickerScreen(
         )
 
         // ── Top header ─────────────────────────────────────────────────────────
-        Column(
+        Surface(
+            color = Color.White.copy(alpha = 0.95f),
+            shadowElevation = 4.dp,
             modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.TopCenter)
         ) {
-            Surface(color = Color.White.copy(alpha = 0.95f), shadowElevation = 4.dp) {
-                Row(
-                    modifier = Modifier
-                        .statusBarsPadding()
-                        .padding(horizontal = 8.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color(0xFF374151))
-                    }
-                    Column(Modifier.padding(start = 4.dp)) {
-                        Text(
-                            if (isStart) "Select Start Location" else "Select End Location",
-                            fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F2937)
-                        )
-                        Text("Tap on the map to pick a point", fontSize = 13.sp, color = Color(0xFF6B7280))
-                    }
-                }
-            }
-
-            Surface(
-                color           = Color.White.copy(alpha = 0.95f),
-                shape           = RoundedCornerShape(24.dp),
-                shadowElevation = 4.dp,
-                modifier        = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 8.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                TextField(
-                    value           = searchQuery,
-                    onValueChange   = { searchQuery = it },
-                    placeholder     = { Text("Search location…", color = Color(0xFF9CA3AF)) },
-                    leadingIcon     = { Icon(Icons.Default.Search, null, tint = Color(0xFF9CA3AF)) },
-                    modifier        = Modifier.fillMaxWidth(),
-                    colors          = TextFieldDefaults.colors(
-                        focusedContainerColor   = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedIndicatorColor   = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent
-                    ),
-                    singleLine = true
-                )
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", tint = Color(0xFF374151))
+                }
+                Column(Modifier.padding(start = 4.dp)) {
+                    Text(
+                        if (isStart) "Select Start Location" else "Select End Location",
+                        fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1F2937)
+                    )
+                    Text("Tap on the map to pick a point", fontSize = 13.sp, color = Color(0xFF6B7280))
+                }
             }
         }
 

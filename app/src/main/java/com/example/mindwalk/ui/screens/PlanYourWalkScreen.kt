@@ -39,20 +39,44 @@ private fun isNetworkAvailable(context: Context): Boolean {
     return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
 }
 
+/**
+ * Walk planning screen where the user configures route parameters before generation.
+ *
+ * Displays three configuration sections:
+ * - **Start Location** — tapping opens [LocationPickerScreen]; defaults to "Current Location".
+ * - **Walk Goals** — duration slider from 10 to 120 minutes.
+ * - **Mindfulness Mode** — chip group with "Green", "Quiet", and "Sight" options.
+ *
+ * When opened from a preset card on [HomeScreen], [preSelectedMode] and [preSelectedDuration]
+ * pre-fill the slider and mode selection. Tapping "Generate Route" calls [onGenerate], which
+ * triggers [PlanViewModel.generatePythonRoute]. A loading dialog blocks interaction while the
+ * request is in flight; an error dialog shows the backend response on failure.
+ *
+ * @param vm                  Shared [PlanViewModel] providing start location state.
+ * @param preSelectedMode     Mindfulness mode pre-selected from a home screen preset (may be empty).
+ * @param preSelectedDuration Duration in minutes pre-filled from a home screen preset (0 = use default 30).
+ * @param onBack              Navigates back to [HomeScreen].
+ * @param onDismissError      Clears the error state when the user dismisses the error dialog.
+ * @param onSelectLocation    Navigates to [LocationPickerScreen] for start location selection.
+ * @param onGenerate          Triggers route generation with the given duration and mode.
+ */
 @Composable
 fun PlanYourWalkScreen(
     vm: PlanViewModel,
     preSelectedMode: String = "",
+    preSelectedDuration: Int = 0,
     onBack: () -> Unit = {},
     onDismissError: () -> Unit = {},
     onSelectLocation: () -> Unit,
-    onSelectEndLocation: () -> Unit = {},
-    onGenerate: (durationMin: Int, mode: String, shape: String) -> Unit
+    onGenerate: (durationMin: Int, mode: String) -> Unit
 ) {
     val context = LocalContext.current
-    var duration by rememberSaveable { mutableStateOf(30) }
-    var mindfulnessMode by rememberSaveable { mutableStateOf(preSelectedMode.ifEmpty { "Calm" }) }
-    var routeShape by rememberSaveable { mutableStateOf("Loop") }
+    var duration by rememberSaveable {
+        mutableStateOf(if (preSelectedDuration > 0) preSelectedDuration else 30)
+    }
+    var mindfulnessMode by rememberSaveable {
+        mutableStateOf(preSelectedMode.ifEmpty { "Green" })
+    }
     var locationOfflineError by remember { mutableStateOf(false) }
     var offlineAction by remember { mutableStateOf<(() -> Unit)?>(null) }
 
@@ -71,27 +95,12 @@ fun PlanYourWalkScreen(
                     Column(
                         modifier = Modifier
                             .padding(horizontal = 24.dp, vertical = 16.dp)
-                            .navigationBarsPadding(),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)
+                            .navigationBarsPadding()
                     ) {
                         PrimaryButton(
                             text = if (vm.isLoading) "Generating…" else "Generate Route"
                         ) {
-                            if (!vm.isLoading) onGenerate(duration, mindfulnessMode, routeShape)
-                        }
-                        OutlinedButton(
-                            onClick = { if (!vm.isLoading) onGenerate(duration, mindfulnessMode, routeShape) },
-                            modifier = Modifier.fillMaxWidth().height(50.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            border = ButtonDefaults.outlinedButtonBorder.copy(
-                                width = 1.dp
-                            )
-                        ) {
-                            Text(
-                                "Auto-generate Nearby Loop",
-                                color = Color(0xFF374151),
-                                fontSize = 15.sp
-                            )
+                            if (!vm.isLoading) onGenerate(duration, mindfulnessMode)
                         }
                     }
                 }
@@ -131,57 +140,26 @@ fun PlanYourWalkScreen(
                     }
                 }
 
-                // Route Shape
+                // Start location
                 item {
-                    SectionCard(title = "Route Shape") {
+                    SectionCard(title = "Start Location") {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            ChoiceChip("Loop", routeShape == "Loop", { routeShape = "Loop" }, Modifier.weight(1f))
-                            ChoiceChip("Line", routeShape == "Line", { routeShape = "Line" }, Modifier.weight(1f))
-                        }
-                    }
-                }
-
-                // Start / End
-                item {
-                    SectionCard(title = "Start / End") {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        if (isNetworkAvailable(context)) onSelectLocation()
-                                        else { offlineAction = { onSelectLocation() }; locationOfflineError = true }
-                                    },
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(Icons.Default.LocationOn, null, tint = Green600, modifier = Modifier.size(18.dp))
-                                Column {
-                                    Text("Start", fontSize = 12.sp, color = Color(0xFF6B7280))
-                                    Text(vm.startLocationName, fontSize = 15.sp, color = Color(0xFF1F2937))
-                                }
-                            }
-                            if (routeShape == "Line") {
-                                HorizontalDivider(color = Color(0xFFE2E8F0))
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clickable {
-                                            if (isNetworkAvailable(context)) onSelectEndLocation()
-                                            else { offlineAction = { onSelectEndLocation() }; locationOfflineError = true }
-                                        },
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Icon(Icons.Default.LocationOn, null, tint = Color(0xFF6B7280), modifier = Modifier.size(18.dp))
-                                    Column {
-                                        Text("End", fontSize = 12.sp, color = Color(0xFF6B7280))
-                                        Text(vm.endLocationName, fontSize = 15.sp, color = Color(0xFF1F2937))
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (isNetworkAvailable(context)) onSelectLocation()
+                                    else {
+                                        offlineAction = { onSelectLocation() }
+                                        locationOfflineError = true
                                     }
-                                }
+                                },
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(Icons.Default.LocationOn, null, tint = Green600, modifier = Modifier.size(18.dp))
+                            Column {
+                                Text("Start", fontSize = 12.sp, color = Color(0xFF6B7280))
+                                Text(vm.startLocationName, fontSize = 15.sp, color = Color(0xFF1F2937))
                             }
                         }
                     }
@@ -224,9 +202,9 @@ fun PlanYourWalkScreen(
                             horizontalArrangement = Arrangement.spacedBy(10.dp),
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            ChoiceChip("Calm",    mindfulnessMode == "Calm",   { mindfulnessMode = "Calm" },    Modifier.weight(1f))
-                            ChoiceChip("Scenic",  mindfulnessMode == "Scenic", { mindfulnessMode = "Scenic" },  Modifier.weight(1f))
-                            ChoiceChip("Explore", mindfulnessMode == "Explore",{ mindfulnessMode = "Explore" }, Modifier.weight(1f))
+                            ChoiceChip("Green", mindfulnessMode == "Green", { mindfulnessMode = "Green" }, Modifier.weight(1f))
+                            ChoiceChip("Quiet", mindfulnessMode == "Quiet", { mindfulnessMode = "Quiet" }, Modifier.weight(1f))
+                            ChoiceChip("Sight", mindfulnessMode == "Sight", { mindfulnessMode = "Sight" }, Modifier.weight(1f))
                         }
                     }
                 }
@@ -237,8 +215,9 @@ fun PlanYourWalkScreen(
     }
 
     when {
-        vm.isLoading       -> LoadingDialog()
-        vm.routeError      -> ErrorDialog(
+        vm.isLoading         -> LoadingDialog()
+        vm.routeError        -> ErrorDialog(
+            message   = vm.routeErrorMessage,
             onRetry   = { vm.retryRoute() },
             onDismiss = onDismissError
         )
@@ -291,7 +270,7 @@ private fun LoadingDialog() {
 }
 
 @Composable
-private fun ErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
+private fun ErrorDialog(message: String?, onRetry: () -> Unit, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = RoundedCornerShape(20.dp), color = Color.White, tonalElevation = 6.dp) {
             Column(
@@ -310,13 +289,13 @@ private fun ErrorDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
                     verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        "Couldn't reach the server",
+                        "Route generation failed",
                         fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        "Check your connection and try again",
+                        message ?: "Check your connection and try again",
                         fontSize = 13.sp,
                         color = Color(0xFF6B7280),
                         textAlign = TextAlign.Center
@@ -401,4 +380,3 @@ private fun LocationOfflineDialog(onRetry: () -> Unit, onDismiss: () -> Unit) {
         }
     }
 }
-

@@ -58,6 +58,10 @@ import kotlin.math.*
 
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
+/**
+ * Mindfulness prompts shown to the user every 30 seconds during the walk.
+ * Each prompt encourages present-moment awareness.
+ */
 private val MINDFUL_PROMPTS = listOf(
     "Notice the sounds around you",
     "Feel your feet touching the ground",
@@ -151,6 +155,27 @@ private fun startTracking(
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
+/**
+ * Active walking screen shown while the user is following the generated route.
+ *
+ * Composed of three layers stacked in a [Box]:
+ * 1. **Full-screen map** ([NavigatorMap]) — OSMDroid map that auto-follows the user's GPS position,
+ *    draws the route polyline, and shows a custom blue user-position dot.
+ * 2. **Direction banner** — shows a rotating compass arrow, the cardinal direction to the next
+ *    waypoint (8 nodes lookahead), distance to that waypoint, and a GPS status icon.
+ * 3. **Bottom panel** — elapsed time, walked distance (accumulated from GPS deltas via Haversine),
+ *    remaining route distance, and the "End Walk" button.
+ *
+ * A coroutine increments [elapsedSecs] every second. Mindful prompts appear every 30 seconds
+ * via [AnimatedVisibility] and can be dismissed by the user.
+ *
+ * GPS updates are registered via [LocationManager.requestLocationUpdates] on both GPS and Network
+ * providers at 2-second / 3-metre intervals inside a [DisposableEffect] that removes the listener
+ * when the composable leaves the composition.
+ *
+ * @param vm        Shared [PlanViewModel] providing the route coordinate list.
+ * @param onEndWalk Navigates to [PostWalkReflectionScreen] when the user taps "End Walk".
+ */
 @Composable
 fun WalkingScreen(vm: PlanViewModel, onEndWalk: () -> Unit) {
     val context     = LocalContext.current

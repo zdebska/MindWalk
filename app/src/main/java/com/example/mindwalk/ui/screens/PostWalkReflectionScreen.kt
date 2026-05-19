@@ -29,16 +29,35 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.mindwalk.data.SavedRoute
 import com.example.mindwalk.data.SerializablePoint
+import com.example.mindwalk.data.WalkRecord
 import com.example.mindwalk.ui.theme.*
 import com.example.mindwalk.ui.viewmodel.PlanViewModel
 import com.example.mindwalk.ui.viewmodel.SavedRoutesViewModel
+import com.example.mindwalk.ui.viewmodel.WalkHistoryViewModel
 import kotlinx.coroutines.delay
 import java.util.UUID
 
+/**
+ * Post-walk reflection screen shown immediately after the user ends a walk.
+ *
+ * Lets the user select their mood via a 2×2 emoji grid. Once a mood is selected, a
+ * "Complete walk" button appears (animated with [slideInVertically]). Tapping it:
+ * 1. Always records a [com.example.mindwalk.data.WalkRecord] via [WalkHistoryViewModel.record].
+ * 2. Optionally saves a [com.example.mindwalk.data.SavedRoute] via [SavedRoutesViewModel.save]
+ *    if the user enabled the "Save this route" toggle and entered a name.
+ * 3. Shows a brief [RewardScreen] ("You earned a leaf!") before calling [onComplete].
+ *
+ * @param planVm        Provides route metadata (distance, duration, mode, shape, points).
+ * @param savedVm       Handles optional route saving to the Room database.
+ * @param walkHistoryVm Handles mandatory walk recording to the Room database.
+ * @param onComplete    Navigates back to [com.example.mindwalk.ui.screens.HomeScreen]
+ *                      with the walk flow removed from the back stack.
+ */
 @Composable
 fun PostWalkReflectionScreen(
     planVm: PlanViewModel,
     savedVm: SavedRoutesViewModel,
+    walkHistoryVm: WalkHistoryViewModel,
     onComplete: () -> Unit
 ) {
     var selectedMood by remember { mutableStateOf<String?>(null) }
@@ -149,17 +168,30 @@ fun PostWalkReflectionScreen(
             ) {
                 Button(
                     onClick = {
+                        val now  = System.currentTimeMillis()
+                        val mood = selectedMood ?: ""
+                        walkHistoryVm.record(
+                            WalkRecord(
+                                id          = UUID.randomUUID().toString(),
+                                completedAt = now,
+                                durationMin = planVm.planDurationMin,
+                                distanceKm  = planVm.planDistanceKm,
+                                mode        = planVm.planMode,
+                                shape       = planVm.planShape,
+                                mood        = mood
+                            )
+                        )
                         if (wantToSave && routeName.isNotBlank()) {
                             savedVm.save(
                                 SavedRoute(
                                     id          = UUID.randomUUID().toString(),
                                     name        = routeName.trim(),
-                                    savedAt     = System.currentTimeMillis(),
+                                    savedAt     = now,
                                     durationMin = planVm.planDurationMin,
                                     distanceKm  = planVm.planDistanceKm,
                                     mode        = planVm.planMode,
                                     shape       = planVm.planShape,
-                                    mood        = selectedMood ?: "",
+                                    mood        = mood,
                                     startName   = planVm.startLocationName,
                                     points      = planVm.previewRoutePoints.map {
                                         SerializablePoint(it.latitude, it.longitude)

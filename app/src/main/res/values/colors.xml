@@ -1,4 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    colors.xml — legacy XML colour palette (Android View system)
+
+    These colours are the default AGP scaffold values retained for the Material
+    theme defined in themes.xml. The MindWalk app uses Jetpack Compose and
+    defines its own colour tokens in ui/theme/Color.kt (Green50–Green700,
+    Blue50–Blue700, Yellow500). The XML colours below are not referenced by
+    any Compose screen.
+-->
 <resources>
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>

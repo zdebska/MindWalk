@@ -28,6 +28,24 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Screen that displays the user's collection of manually saved walking routes.
+ *
+ * Reloads the saved routes list from Room via [SavedRoutesViewModel.reload] on every
+ * screen entry. When the list is empty an empty-state illustration is shown; otherwise
+ * each route is rendered as a [SavedRouteCard].
+ *
+ * Tapping a card calls [onRouteSelected], which loads the route into [com.example.mindwalk.ui.viewmodel.PlanViewModel]
+ * and navigates to [RoutePreviewScreen] so the user can re-walk the saved route.
+ * Long-pressing the delete icon inside a card shows a confirmation [AlertDialog] before
+ * calling [SavedRoutesViewModel.delete].
+ *
+ * @param savedVm        [SavedRoutesViewModel] providing the list of [com.example.mindwalk.data.SavedRoute]s.
+ * @param onBack         Navigates back (pops the back stack).
+ * @param onHome         Switches the bottom nav tab to [HomeScreen].
+ * @param onJourney      Switches the bottom nav tab to [JourneyScreen].
+ * @param onRouteSelected Called with the tapped [com.example.mindwalk.data.SavedRoute] to begin re-walking it.
+ */
 @Composable
 fun SavedRoutesScreen(
     savedVm: SavedRoutesViewModel,
@@ -111,6 +129,17 @@ fun SavedRoutesScreen(
     }
 }
 
+/**
+ * Card representing a single saved route entry.
+ *
+ * Displays the route name, save date, duration, distance, start location, mode badge,
+ * shape badge, and optional mood badge. Tapping the card triggers [onClick]; tapping the
+ * delete icon opens a confirmation [AlertDialog] before invoking [onDelete].
+ *
+ * @param route    The [SavedRoute] to display.
+ * @param onDelete Called after the user confirms deletion.
+ * @param onClick  Called when the card body is tapped to re-walk the route.
+ */
 @Composable
 private fun SavedRouteCard(route: SavedRoute, onDelete: () -> Unit, onClick: () -> Unit) {
     var showDeleteConfirm by remember { mutableStateOf(false) }
@@ -195,6 +224,12 @@ private fun SavedRouteCard(route: SavedRoute, onDelete: () -> Unit, onClick: () 
     }
 }
 
+/**
+ * Small row widget showing an icon beside a text value, used for route metadata (duration, distance, start).
+ *
+ * @param icon Material icon to display.
+ * @param text The value to display next to the icon.
+ */
 @Composable
 private fun StatChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
     Row(
@@ -206,6 +241,13 @@ private fun StatChip(icon: androidx.compose.ui.graphics.vector.ImageVector, text
     }
 }
 
+/**
+ * Pill-shaped label used for mode, shape, and mood values on a [SavedRouteCard].
+ *
+ * @param containerColor Background fill of the badge.
+ * @param contentColor   Text colour.
+ * @param text           The label string to display.
+ */
 @Composable
 private fun Badge(containerColor: Color, contentColor: Color, text: String) {
     Surface(color = containerColor, shape = RoundedCornerShape(50)) {

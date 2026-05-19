@@ -1,3 +1,11 @@
+<!--
+    strings.xml — application string resources
+
+    All user-visible text is defined here for easy localisation.
+    Screen labels and dynamic strings are composed in Kotlin/Compose code;
+    only system-level strings (app name, notification channels) belong here.
+-->
 <resources>
+    <!-- Application name shown on the launcher icon and in the system task switcher -->
     <string name="app_name">MindWalk</string>
 </resources>

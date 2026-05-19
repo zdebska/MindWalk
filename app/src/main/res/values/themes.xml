@@ -1,5 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<!--
+    themes.xml — system-level Activity theme
 
+    MindWalk is a fully Compose-driven app. This theme's only responsibilities are:
+      • Setting NoActionBar so the system action bar is not rendered (Compose draws its own)
+      • Providing a Material Light base for the window background before the first
+        Compose frame is drawn, avoiding a momentary dark flash on startup.
+
+    All visual styling (colours, typography, shapes) is handled in the Compose
+    MaterialTheme defined in ui/theme/MindWalkTheme.kt.
+-->
+<resources>
     <style name="Theme.MindWalk" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

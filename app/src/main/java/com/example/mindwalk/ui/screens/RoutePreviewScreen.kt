@@ -20,6 +20,20 @@ import com.example.mindwalk.ui.theme.Green600
 import com.example.mindwalk.ui.theme.Green700
 import com.example.mindwalk.ui.viewmodel.PlanViewModel
 
+/**
+ * Full-screen route preview displayed after a route is successfully generated.
+ *
+ * Shows the route polyline on an [OsmRouteMap] with a translucent top header and a bottom
+ * card ([RouteDetailsCard]) containing distance, duration, and vibe statistics.
+ *
+ * The "New route" button calls [PlanViewModel.retryRoute], which increments the seed and
+ * re-sends the same parameters to the backend, producing a different route variant.
+ * A [DisposableEffect] resets the seed to 0 when this screen leaves the composition.
+ *
+ * @param vm          Shared [PlanViewModel] providing route points and metadata.
+ * @param onBack      Navigates back to [PlanYourWalkScreen].
+ * @param onStartWalk Navigates to [WalkingScreen] to begin the walk.
+ */
 @Composable
 fun RoutePreviewScreen(
     vm: PlanViewModel,
@@ -27,6 +41,10 @@ fun RoutePreviewScreen(
     onStartWalk: () -> Unit = {}
 ) {
     val routePoints = vm.previewRoutePoints
+
+    DisposableEffect(Unit) {
+        onDispose { vm.resetSeed() }
+    }
 
     Box(Modifier.fillMaxSize()) {
 
@@ -75,8 +93,9 @@ fun RoutePreviewScreen(
             distanceKm  = vm.planDistanceKm,
             durationMin = vm.planDurationMin,
             vibe        = vm.planMode.ifEmpty { "Mindful" },
+            isLoading   = vm.isLoading,
             onStartWalk = onStartWalk,
-            onTryAgain  = { vm.generateABRoute() },
+            onTryAgain  = { vm.retryRoute() },
             onEdit      = { onBack() },
             modifier    = Modifier
                 .align(Alignment.BottomCenter)
@@ -90,6 +109,7 @@ private fun RouteDetailsCard(
     distanceKm: Double,
     durationMin: Int,
     vibe: String,
+    isLoading: Boolean,
     onStartWalk: () -> Unit,
     onTryAgain: () -> Unit,
     onEdit: () -> Unit,
@@ -150,15 +170,26 @@ private fun RouteDetailsCard(
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 OutlinedButton(
-                    onClick = onTryAgain,
+                    onClick = { if (!isLoading) onTryAgain() },
                     shape = RoundedCornerShape(14.dp),
                     modifier = Modifier.weight(1f).height(46.dp),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = Green700),
-                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp)
+                    border = ButtonDefaults.outlinedButtonBorder.copy(width = 1.dp),
+                    enabled = !isLoading
                 ) {
-                    Icon(Icons.Default.Refresh, null, Modifier.size(16.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("New route", fontSize = 14.sp)
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(14.dp),
+                            strokeWidth = 2.dp,
+                            color = Green700
+                        )
+                        Spacer(Modifier.width(6.dp))
+                        Text("Loading…", fontSize = 14.sp)
+                    } else {
+                        Icon(Icons.Default.Refresh, null, Modifier.size(16.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text("New route", fontSize = 14.sp)
+                    }
                 }
                 OutlinedButton(
                     onClick = onEdit,
