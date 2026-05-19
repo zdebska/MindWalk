@@ -40,7 +40,6 @@ A mindful walking companion for Android. MindWalk generates personalised walking
 |---|---|
 | AI-assisted route generation | Python backend on Azure selects mindful routes using a custom graph algorithm |
 | Three mindfulness modes | **Green** (parks & nature), **Quiet** (low-traffic streets), **Sight** (landmarks & viewpoints) |
-| Two route shapes | **Loop** (start = end), **Line** (A → B point-to-point) |
 | Interactive map | OSMDroid tile map for location picking and route preview |
 | Leaf collection | One leaf earned per completed walk; displayed in a visual board on the Journey screen |
 | Monthly goals | Set a target for number of walks, distance (km), or active time (minutes) |
@@ -214,9 +213,9 @@ The Home screen shows:
 - Your **active city** with a pencil icon — tap it to change city.
 - **Preset walk cards** — one-tap shortcuts for common walks:
   - *Touch the grass* — 10 min, Green mode
-  - *City wander* — 20 min, Sight mode
-  - *Peaceful stroll* — 15 min, Quiet mode
-  - *Long explorer* — 45 min, Green mode
+  - *City look* — 20 min, Sight mode
+  - *Calm walk* — 15 min, Quiet mode
+  - *Mind reload* — 60 min, Green mode
 - **Bottom navigation bar** (Home / Journey / Saved).
 
 Tap any preset card to jump directly to the Plan screen with those settings pre-filled.
@@ -231,9 +230,7 @@ Tap **Plan a walk** or any preset to open the **Plan Your Walk** screen.
 |---|---|
 | **Duration** | Drag the slider to select walk length (10–60 minutes) |
 | **Mindfulness mode** | Green · Quiet · Sight — affects which streets/areas the route prefers |
-| **Route shape** | Loop (returns to start) or Line (one-way, pick an end point) |
 | **Start location** | Tap the location row to open the map picker, or uses your GPS position |
-| **End location** | Visible only for Line routes; tap to pick on the map |
 
 Tap **Generate route** to request a route from the backend. A loading indicator is shown while the route is computed.
 
@@ -244,11 +241,11 @@ Tap **Generate route** to request a route from the backend. A loading indicator 
 The **Route Preview** screen shows the generated route on a full-screen map.
 
 - The route polyline is drawn in green.
-- **Start** (green marker) and **End** (red marker) pins are shown.
-- Route stats are displayed at the bottom: distance (km) and estimated duration (min).
-- Tap **Regenerate** to request an alternative route with a different random seed.
+- **Start** pin is shown.
+- Route stats are displayed at the bottom: distance (km), estimated duration (min) and vibe.
+- Tap **New route** to request an alternative route with a different random seed.
 - Tap **Start walk** to begin the active walking session.
-- Tap **Save** to save the route to your library without walking it.
+- Tap **Edit** to change route settings.
 
 ---
 
@@ -258,8 +255,9 @@ The **Walking screen** shows:
 
 - The route map with your progress.
 - Distance and time remaining.
+- Distance you've already walked.
 - **Mindful prompts** — periodic gentle reminders to notice your surroundings.
-- Tap **Finish walk** to end the session early, or the walk ends automatically when you reach the destination.
+- Tap **End walk** to end the session early, or the walk ends automatically when you reach the destination.
 
 ---
 
@@ -267,9 +265,9 @@ The **Walking screen** shows:
 
 After finishing a walk, the **Reflection screen** appears.
 
-1. Select your mood from the emoji grid (Great / Good / Okay / Tired).
+1. Select your mood from the emoji grid (Great / Good / Okay / Not great).
 2. Optionally name and save the route for future reuse.
-3. Tap **Done** to return Home. A new **leaf** is added to your Journey board.
+3. Tap **Complete walk** to return Home. A new **leaf** is added to your Journey board.
 
 ---
 
@@ -277,7 +275,7 @@ After finishing a walk, the **Reflection screen** appears.
 
 The **Journey screen** has three sections:
 
-**Stats row** — shows walks completed this month, favourite mode, and total distance this month.
+**Stats row** — shows total completed walks, walks completed this month and favourite mode.
 
 **Goal card** — shows your monthly goal progress (see [Monthly goals](#monthly-goals) below).
 
@@ -296,7 +294,7 @@ Tap **Set a goal** (or **Change** on an active goal card) to open the **Set Goal
 2. Drag the slider to set your target value. A context hint shows the equivalent weekly rate.
 3. Tap **Save goal** (or **Update goal** if one already exists).
 
-The goal card on the Journey screen shows an animated progress bar that fills as you complete walks. Progress is calculated from planned route data (distance and duration from the generated route, not GPS tracking).
+The goal card on the Journey screen shows an animated progress bar that fills as you complete walks. Progress is calculated from planned route data (distance and duration from the generated route).
 
 ---
 
@@ -476,12 +474,6 @@ MindWalk/
 
 API documentation is pre-generated in the `docs/` folder. Open `docs/index.html` in any browser.
 
-To regenerate after code changes:
-
-```powershell
-.\gradlew.bat :app:dokkaHtml
-Copy-Item -Path app\build\dokka\html -Destination docs -Recurse -Force
-```
 
 The docs cover all public classes, functions, and properties with KDoc descriptions.
 
