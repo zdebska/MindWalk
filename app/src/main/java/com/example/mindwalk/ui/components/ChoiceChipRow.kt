@@ -15,6 +15,19 @@ import com.example.mindwalk.ui.theme.Green100
 import com.example.mindwalk.ui.theme.Green600
 import com.example.mindwalk.ui.theme.Green700
 
+/**
+ * Single selectable chip used inside the Mindfulness Mode group on
+ * [com.example.mindwalk.ui.screens.PlanYourWalkScreen].
+ *
+ * When [active] the chip shows a [Green100] background with a [Green600] border and
+ * semi-bold [Green700] label. When inactive it uses a translucent white background with
+ * a light grey border and a grey label.
+ *
+ * @param text     The label displayed inside the chip (e.g. "Green", "Quiet", "Sight").
+ * @param active   Whether this chip is the currently selected option.
+ * @param onClick  Called when the chip is tapped.
+ * @param modifier Layout modifier applied to the chip, typically `Modifier.weight(1f)`.
+ */
 @Composable
 fun ChoiceChip(
     text: String,
@@ -24,18 +37,18 @@ fun ChoiceChip(
 ) {
     AssistChip(
         onClick = onClick,
-        label = {
+        label   = {
             Text(
                 text,
                 fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (active) Green700 else Color(0xFF6B7280)
+                color      = if (active) Green700 else Color(0xFF6B7280)
             )
         },
         colors = AssistChipDefaults.assistChipColors(
             containerColor = if (active) Green100 else Color.White.copy(alpha = 0.6f)
         ),
-        border = BorderStroke(1.dp, if (active) Green600 else Color(0xFFE2E8F0)),
-        shape = RoundedCornerShape(12.dp),
+        border   = BorderStroke(1.dp, if (active) Green600 else Color(0xFFE2E8F0)),
+        shape    = RoundedCornerShape(12.dp),
         modifier = modifier.height(44.dp)
     )
 }

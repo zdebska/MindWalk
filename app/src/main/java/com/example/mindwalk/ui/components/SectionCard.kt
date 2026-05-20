@@ -12,6 +12,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * Titled card container used to group related configuration options on planning screens.
+ *
+ * Renders a semi-transparent white [Surface] with a bold section title followed by
+ * the caller-supplied [content] slot. Used by
+ * [com.example.mindwalk.ui.screens.PlanYourWalkScreen] for the "Start Location",
+ * "Walk Goals", and "Mindfulness Mode" sections.
+ *
+ * @param title    Text shown as the section heading.
+ * @param modifier Layout modifier applied to the card surface.
+ * @param content  Composable slot rendered below the title, scoped to a [ColumnScope].
+ */
 @Composable
 fun SectionCard(
     title: String,
@@ -20,19 +32,19 @@ fun SectionCard(
 ) {
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White.copy(alpha = 0.7f)
+        shape    = RoundedCornerShape(16.dp),
+        color    = Color.White.copy(alpha = 0.7f)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier            = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
                 title,
-                style = MaterialTheme.typography.titleMedium,
+                style      = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
-                color = Color(0xFF1F2937)
+                fontSize   = 15.sp,
+                color      = Color(0xFF1F2937)
             )
             content()
         }

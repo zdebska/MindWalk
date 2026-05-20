@@ -207,7 +207,16 @@ fun AppNav() {
                 walkHistoryVm = walkHistoryVm,
                 onBack        = { navController.popBackStack() },
                 onHome        = { switchTab(Routes.HOME) },
-                onSaved       = { switchTab(Routes.SAVED) }
+                onSaved       = { switchTab(Routes.SAVED) },
+                onSetGoal     = { navController.navigate(Routes.SET_GOAL) }
+            )
+        }
+
+        // ── Set / update monthly goal ─────────────────────────────────────────
+        composable(Routes.SET_GOAL) {
+            SetGoalScreen(
+                walkHistoryVm = walkHistoryVm,
+                onBack        = { navController.popBackStack() }
             )
         }
     }

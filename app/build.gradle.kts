@@ -13,6 +13,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
     // Kotlin Symbol Processing — used by Room to generate DAO/database code
     id("com.google.devtools.ksp")
+    // Dokka — generates HTML docs from KDoc comments; run with ./gradlew dokkaHtml
+    id("org.jetbrains.dokka")
 }
 
 android {

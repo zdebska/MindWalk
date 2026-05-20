@@ -115,6 +115,7 @@ fun LocationPickerScreen(
 
     var selectedPoint  by remember { mutableStateOf(initialPoint ?: GeoPoint(49.1951, 16.6068)) }
     var selectedName   by remember { mutableStateOf(initialName) }
+    var isLocating     by remember { mutableStateOf(false) }
 
     fun hasPermission() = ContextCompat.checkSelfPermission(
         context, Manifest.permission.ACCESS_FINE_LOCATION
@@ -148,11 +149,20 @@ fun LocationPickerScreen(
             return@DisposableEffect onDispose {}
         }
 
+        val hasProvider = lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                          lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        if (!hasProvider) return@DisposableEffect onDispose {}
+
+        isLocating = true
         val listener = requestOneShotLocation(lm) { gp ->
+            isLocating    = false
             selectedPoint = gp
             selectedName  = "Current Location"
         }
-        onDispose { lm.removeUpdates(listener) }
+        onDispose {
+            lm.removeUpdates(listener)
+            isLocating = false
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -232,25 +242,41 @@ fun LocationPickerScreen(
                 .background(Green600),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = {
-                if (!hasPermission()) {
-                    permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-                } else {
-                    val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-                    val cached = lastKnownGeoPoint(lm)
-                    if (cached != null) {
-                        selectedPoint = cached
-                        selectedName  = "Current Location"
+            IconButton(
+                enabled = !isLocating,
+                onClick = {
+                    if (!hasPermission()) {
+                        permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                     } else {
-                        // Fire-and-forget one-shot: listener removes itself after first fix
-                        requestOneShotLocation(lm) { gp ->
-                            selectedPoint = gp
+                        val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+                        val cached = lastKnownGeoPoint(lm)
+                        if (cached != null) {
+                            selectedPoint = cached
                             selectedName  = "Current Location"
+                        } else {
+                            val hasProvider = lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                                              lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+                            if (hasProvider) {
+                                isLocating = true
+                                requestOneShotLocation(lm) { gp ->
+                                    isLocating    = false
+                                    selectedPoint = gp
+                                    selectedName  = "Current Location"
+                                }
+                            }
                         }
                     }
                 }
-            }) {
-                Icon(Icons.Default.MyLocation, "My Location", tint = Color.White, modifier = Modifier.size(22.dp))
+            ) {
+                if (isLocating) {
+                    CircularProgressIndicator(
+                        color       = Color.White,
+                        strokeWidth = 2.dp,
+                        modifier    = Modifier.size(22.dp)
+                    )
+                } else {
+                    Icon(Icons.Default.MyLocation, "My Location", tint = Color.White, modifier = Modifier.size(22.dp))
+                }
             }
         }
 

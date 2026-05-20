@@ -100,7 +100,7 @@ MindWalk sends route requests to a Python backend hosted on Azure. The base URL 
 private const val BASE_URL = "http://<your-azure-vm-ip>:5000/"
 ```
 
-If the backend is unreachable, the app automatically falls back to OSRM for route generation (no configuration needed — OSRM is public).
+If the backend is unreachable, route generation fails with an error dialog. An `OsrmService` class exists in the codebase but is not wired as an automatic fallback — it is retained as dead code from an earlier prototype.
 
 ### Build and run
 
@@ -291,7 +291,7 @@ PlanViewModel.generatePythonRoute()
     │         │                   (graph-based route)
     │         │ success ◄─────────────────────────────
     │         │
-    │         └── failure ──► Error pop-up
+    │         └── failure ──► routeError = true (error dialog shown to user)
     │
     ▼
 RoutePreviewData (polyline points, distance, duration)

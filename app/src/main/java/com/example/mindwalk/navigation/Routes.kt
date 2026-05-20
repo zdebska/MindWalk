@@ -39,4 +39,7 @@ object Routes {
 
     /** City-change screen, reusing the onboarding UI for an already-configured user. */
     const val CHANGE_CITY         = "change_city"
+
+    /** Monthly goal configuration screen reached from [JOURNEY]. */
+    const val SET_GOAL            = "set_goal"
 }

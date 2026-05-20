@@ -93,20 +93,22 @@ class PythonRouteService {
         distanceKm: Double,
         mode: String,
         seed: Int = 0,
+        nCandidates: Int = 5,
         startLat: Double? = null,
         startLon: Double? = null,
         endLat: Double? = null,
         endLon: Double? = null
     ): List<Point> {
         val request = RouteRequest(
-            place      = place,
-            distanceKm = distanceKm,
-            startLat   = startLat,
-            startLon   = startLon,
-            endLat     = endLat,
-            endLon     = endLon,
-            mode       = mode.lowercase(),
-            seed       = seed
+            place        = place,
+            distanceKm   = distanceKm,
+            startLat     = startLat,
+            startLon     = startLon,
+            endLat       = endLat,
+            endLon       = endLon,
+            mode         = mode.lowercase(),
+            seed         = seed,
+            nCandidates  = nCandidates
         )
 
         val response = api.getRoute(request)

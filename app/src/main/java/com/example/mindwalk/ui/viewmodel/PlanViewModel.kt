@@ -163,7 +163,7 @@ class PlanViewModel(app: Application) : AndroidViewModel(app) {
         routeError   = false
         isLoading    = true
         val city = CityPreferences.getCity(getApplication()) ?: "Brno, Czechia"
-        val seed = routeSeed
+        val seed = kotlin.random.Random.nextInt()
 
         viewModelScope.launch(Dispatchers.IO) {
             try {
@@ -174,14 +174,15 @@ class PlanViewModel(app: Application) : AndroidViewModel(app) {
                     ?: getCurrentLocation(getApplication())
 
                 val route = pythonRouteService.getRouteFromPython(
-                    place      = city,
-                    distanceKm = distanceKm,
-                    mode       = mode,
-                    seed       = seed,
-                    startLat   = resolvedStart?.latitude,
-                    startLon   = resolvedStart?.longitude,
-                    endLat     = endLocation?.latitude,
-                    endLon     = endLocation?.longitude
+                    place        = city,
+                    distanceKm   = distanceKm,
+                    mode         = mode,
+                    seed         = seed,
+                    nCandidates  = 5,
+                    startLat     = resolvedStart?.latitude,
+                    startLon     = resolvedStart?.longitude,
+                    endLat       = endLocation?.latitude,
+                    endLon       = endLocation?.longitude
                 )
                 previewRoutePoints = route.map { GeoPoint(it.lat, it.lon) }
             } catch (e: Exception) {
