@@ -26,11 +26,10 @@ A mindful walking companion for Android. MindWalk generates personalised walking
    - [Monthly goals](#monthly-goals)
    - [Saved routes](#saved-routes)
    - [Changing your city](#changing-your-city)
-6. [Navigation map](#navigation-map)
-7. [Data flow diagram](#data-flow-diagram)
-8. [Project structure](#project-structure)
-9. [Generating documentation](#generating-documentation)
-10. [Permissions](#permissions)
+6. [Data flow diagram](#data-flow-diagram)
+7. [Project structure](#project-structure)
+8. [Generating documentation](#generating-documentation)
+9. [Permissions](#permissions)
 
 ---
 
