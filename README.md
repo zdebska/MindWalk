@@ -385,6 +385,8 @@ MindWalk/
 │   │
 ├── docs/                             # Dokka-generated HTML documentation
 │   └── index.html                    # Open in browser to browse API docs
+├── apk/                              # 
+│   └── MindWalk.apk                  # Apk file ready to be installed on device
 │
 ├── build.gradle.kts                  # Root build script (plugin versions)
 ├── app/build.gradle.kts              # App module build script
