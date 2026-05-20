@@ -38,7 +38,7 @@ A mindful walking companion for Android. MindWalk generates personalised walking
 
 | Feature | Details |
 |---|---|
-| AI-assisted route generation | Python backend on Azure selects mindful routes using a custom graph algorithm |
+| Route generation | Python backend on Azure selects mindful routes using a custom graph algorithm |
 | Three mindfulness modes | **Green** (parks & nature), **Quiet** (low-traffic streets), **Sight** (landmarks & viewpoints) |
 | Interactive map | OSMDroid tile map for location picking and route preview |
 | Leaf collection | One leaf earned per completed walk; displayed in a visual board on the Journey screen |
@@ -46,55 +46,10 @@ A mindful walking companion for Android. MindWalk generates personalised walking
 | Saved routes | Save and replay any generated route; delete when no longer needed |
 | Walk history stats | Walks this month, favourite mode, progress toward goal |
 | City switching | Change city at any time; backend re-indexes the new city graph automatically |
-| Offline fallback | OSRM-based local routing used when the Python backend is unreachable |
 
 ---
 
-## Architecture overview
 
-MindWalk follows the **single-Activity MVVM** pattern using Jetpack Compose and Navigation Compose.
-
-```
-┌─────────────────────────────────────────────────────────┐
-│                       MainActivity                       │
-│  ┌───────────────────────────────────────────────────┐  │
-│  │                    NavHost (AppNav)                │  │
-│  │                                                   │  │
-│  │  Onboarding → Home → Plan → Preview → Walking     │  │
-│  │                  ↓               ↓                │  │
-│  │             ChangeCity      Reflection            │  │
-│  │                                                   │  │
-│  │  Journey ←→ SetGoal        SavedRoutes            │  │
-│  └───────────────────────────────────────────────────┘  │
-│                                                         │
-│  ViewModels (AndroidViewModel)                          │
-│   ├── OnboardingViewModel  — city search & graph prep   │
-│   ├── PlanViewModel        — route generation & state   │
-│   ├── WalkHistoryViewModel — walk records & goals       │
-│   └── SavedRoutesViewModel — saved route CRUD           │
-│                                                         │
-│  Data layer                                             │
-│   ├── Room (MindWalkDatabase)                           │
-│   │    ├── SavedRoute / SavedRouteDao                   │
-│   │    └── WalkRecord / WalkRecordDao                   │
-│   ├── SharedPreferences                                 │
-│   │    ├── CityPreferences  — active city name          │
-│   │    └── GoalPreferences  — monthly goal              │
-│   └── RouteRepository      — bridges DAOs & services    │
-│                                                         │
-│  Service layer                                          │
-│   ├── PythonRouteService   — Azure ML route backend     │
-│   ├── OsrmService          — local OSRM fallback        │
-│   ├── NominatimService     — city geocoding             │
-│   └── LoopHeuristics       — geometric loop waypoint    │
-└─────────────────────────────────────────────────────────┘
-         │                          │
-         ▼                          ▼
-  Azure Python backend         OpenStreetMap
-  (route generation,           (Nominatim geocoder,
-   graph indexing)              OSRM routing,
-                                OSMDroid tiles)
-```
 
 ---
 
@@ -319,37 +274,6 @@ From the Home screen, tap the **pencil icon** next to your city name. The city s
 
 ---
 
-## Navigation map
-
-```
-[Onboarding] ──────────────────────────────────────────► [Home]
-                                                           │  │
-                          ┌────────────────────────────────┘  │
-                          ▼                                    │
-                    [ChangeCity] ◄── (pencil icon)             │
-                                                               │
-                     [Plan] ◄──────────────────────────────────┘
-                       │
-             ┌─────────┼──────────────────┐
-             ▼         ▼                  ▼
-    [LocationPicker] [EndLocationPicker] (back)
-                         │
-                         ▼
-                     [Preview]
-                       │   │
-              (Save)   │   │  (Start walk)
-                       │   ▼
-                       │ [Walking]
-                       │     │
-                       │     ▼
-                       │ [Reflection]
-                       │     │
-                       └─────┴──────────────► [Home]
-
-[Home] ──► [Journey] ──► [SetGoal]
-  │           │
-  └──────────►└──► [Saved]
-```
 
 ---
 
@@ -368,7 +292,7 @@ PlanViewModel.generatePythonRoute()
     │         │                   (graph-based route)
     │         │ success ◄─────────────────────────────
     │         │
-    │         └── failure ──► OsrmService (OSRM fallback)
+    │         └── failure ──► Error pop-up
     │
     ▼
 RoutePreviewData (polyline points, distance, duration)
